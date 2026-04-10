@@ -1,0 +1,152 @@
+sudo nano /etc/sysctl.conf
+
+net.core.default_qdisc=fq
+net.ipv4.tcp_congestion_control=bbr
+
+sudo sysctl -p
+
+sysctl net.ipv4.tcp_congestion_control
+
+
+wget https://github.com/SoftEtherVPN/SoftEtherVPN_Stable/releases/download/v4.44-9807-rtm/softether-vpnserver-v4.44-9807-rtm-2025.04.16-linux-x64-64bit.tar.gz
+
+tar xvf softether-vpnserver-v4.44-9807-rtm-2025.04.16-linux-x64-64bit.tar.gz
+
+cd vpnserver/
+
+sudo apt install -y gcc binutils gzip libreadline-dev libssl-dev libncurses5-dev libncursesw5-dev libpthread-stubs0-dev
+
+make
+
+sudo nano lang.config
+
+cd ..
+
+sudo mv vpnserver /opt/softether
+
+sudo /opt/softether/vpnserver start
+
+sudo /opt/softether/vpnserver stop
+
+sudo nano /etc/systemd/system/softether-vpnserver.service
+
+[Unit]
+Description=SoftEther VPN server
+After=network-online.target
+After=dbus.service
+
+[Service]
+Type=forking
+ExecStart=/opt/softether/vpnserver start
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+sudo systemctl start softether-vpnserver
+
+sudo systemctl enable softether-vpnserver
+
+systemctl status softether-vpnserver
+
+sudo  ss -lnptu | grep vpnserver
+
+sudo ufw allow 80,443,992,1194,555/tcp
+
+sudo ufw allow 1194,51612,53400,56452,40085/udp
+
+/opt/softether/vpncmd
+
+127.0.0.1:5555
+
+ServerPasswordSet
+
+Hub DEFAULT
+
+UserCreate xxxxx
+
+UserPasswordSet xxxxx
+
+SecureNatEnable
+
+DhcpSet
+
+Start Point for Distributed Address Band: 192.168.30.10
+End Point for Distributed Address Band: 192.168.30.200
+Subnet Mask: 255.255.255.0
+Lease Limit (Seconds): 7200
+Default Gateway: 192.168.30.1
+DNS Server 1: 192.168.30.1
+DNS server 2: 1.0.0.1
+Domain Name: Press Enter to skip.
+Save Log: yes
+
+exit
+
+sudo apt install -y bind9
+
+systemctl status named
+
+sudo nano /etc/bind/named.conf.options
+
+allow-recursion { 127.0.0.1; 192.168.30.0/24; };
+
+sudo nano /etc/default/named
+
+OPTIONS="-u bind -4"
+
+sudo rndc managed-keys destroy
+
+sudo rndc reconfig
+
+sudo systemctl restart named
+
+sudo ufw insert 1 allow in from 192.168.30.0/24
+
+sudo apt install -y certbot
+
+certbot --version
+
+sudo nano /etc/nginx/conf.d/vpv.example.com.conf
+
+server {
+      listen 80;
+      listen [::]:80;
+      server_name vpn.example.com;
+      root /var/www/html/;
+      location ~ /.well-known/acme-challenge {
+         allow all;
+      }
+}
+
+
+
+sudo mkdir -p /var/www/html
+
+sudo chown www-data:www-data /var/www/html -R
+
+sudo systemctl reload nginx
+
+sudo certbot certonly --webroot --agree-tos --key-type rsa --email you@example.com -d vpn.example.com -w /var/www/html
+
+sudo /opt/softether/vpncmd 127.0.0.1:5555
+
+ServerCertSet
+
+/etc/letsencrypt/live/vpn.example.com/fullchain.pem
+
+/etc/letsencrypt/live/vpn.example.com/privkey.pem
+
+exit
+
+sudo systemctl restart softether-vpnserver
+
+sudo crontab -e
+
+@daily certbot renew --quiet; systemctl restart softether-vpnserver
+
+
+
+@daily certbot renew –quiet; /opt/softether/vpncmd localhost:5555 /SERVER /PASSWORD:youpasswd /CMD ServerCertSet /LOADCERT:/etc/letsencrypt/live/vpn.example.com/fullchain.pem /LOADKEY:/etc/letsencrypt/live/vpn.example.com/privkey.pem

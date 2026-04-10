@@ -1,0 +1,80 @@
+{
+  "log": {
+    "loglevel": "warning",
+    "access": "/var/log/xray/access.log",
+    "error": "/var/log/xray/error.log"
+    },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10809,
+      "protocol": "http"
+    },
+    {
+      "listen": "0.0.0.0",
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "xxxxx",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "dest": "www.apple.com:443",
+          "serverNames": ["www.apple.com"],
+          "privateKey": "xxxxx",
+          "shortIds": ["xxxxx"]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "xxxxx",    // 此处填写你使用的 CDN 的 IP 或 域名
+            "port": 443,
+            "users": [
+              {
+                "id": "xxxxx",    // 与服务端一致
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "tag": "PROXY:XHTTP+TLS",
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "xxxxx",    // 与服务端一致
+          "allowInsecure": false,    // 仅客户端设置
+          "alpn": ["h2"],    // h2 已非常丝滑，如果你使用的 CDN 支持 h3 且你所在地区对 UDP 的 QoS 不严重，可以填 "h3"
+          "fingerprint": "chrome"
+        },
+        "xhttpSettings": {
+          "host": "xxxxx",    // 过CDN时必须填 host
+          "path": "/xxxxx",    // 不要照抄，尽可能将 path 设置得复杂一些，与服务端保持一致
+          "mode": "auto"
+        }
+      }
+    }
+  ]
+
+}
+
