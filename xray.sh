@@ -54,76 +54,7 @@ EOF
 # ==================== 5. 写入空配置 ====================
 echo -e "\n✅ 生成配置"
 cat > /usr/local/etc/xray/config.json << EOF
-{
-  "log": {
-    "loglevel": "warning",
-    "access": "/var/log/xray/access.log",
-    "error": "/var/log/xray/error.log"
-    },
-  "inbounds": [
-    {
-      "listen": "127.0.0.1",
-      "port": 10808,
-      "protocol": "socks"
-    },
-    {
-      "listen": "127.0.0.1",
-      "port": 10809,
-      "protocol": "http"
-    },
-    {
-      "listen": "0.0.0.0",
-            "port": 1234,
-            "protocol": "vmess",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "ac4ddd61-8827-4600-be73-32675e6ed7da"
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "tcp"
-            }
-        }
-    ],
-  "outbounds": [
-    {
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "us.zhaolibin.cloud",    // 此处填写你使用的 CDN 的 IP 或 域名
-            "port": 443,
-            "users": [
-              {
-                "id": "ac4ddd61-8827-4600-be73-32675e6ed7da",    // 与服务端一致
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "tag": "PROXY:XHTTP+TLS",
-      "streamSettings": {
-        "network": "xhttp",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "us.zhaolibin.cloud",    // 与服务端一致
-          "allowInsecure": false,    // 仅客户端设置
-          "alpn": ["h2"],    // h2 已非常丝滑，如果你使用的 CDN 支持 h3 且你所在地区对 UDP 的 QoS 不严重，可以填 "h3"
-          "fingerprint": "chrome"
-        },
-        "xhttpSettings": {
-          "host": "us.zhaolibin.cloud",    // 过CDN时必须填 host
-          "path": "/us-xhttp3",    // 不要照抄，尽可能将 path 设置得复杂一些，与服务端保持一致
-          "mode": "auto"
-        }
-      }
-    }
-  ]
-}
-
+{}
 EOF
 
 # ==================== 6. 启动服务 ====================
