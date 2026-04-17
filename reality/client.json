@@ -38,7 +38,7 @@
                 "realitySettings": {
                     "fingerprint": "firefox",
                     "serverName": "www.pixiv.co.jp",
-                    "publicKey": "xxxxx"
+                    "publicKey": "xxxxx",
                     "shortId": "xxxxx"
                 }
             },
